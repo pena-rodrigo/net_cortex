@@ -14,6 +14,9 @@
 # include <fstream>
 # include <unistd.h>
 # include <algorithm>
+# include <gsl/gsl_rng.h>
+# include <gsl/gsl_randist.h>
+# include <chrono>
 
 /* Generate a uniform randon number between 0 and 1 */
 double randun() {
@@ -72,40 +75,48 @@ void runsim(double W, double g, double seed) {
 		n[pre].post.push_back(pos);  // Connect neurons by adding pre index to pres list of the postsynaptic neuron
 	}
 	fclose(mat);
-
+	
+	gsl_rng * r_aloc;
+  	r_aloc = gsl_rng_alloc(gsl_rng_mt19937);
+  	gsl_rng_set(r_aloc, chrono::high_resolution_clock::now().time_since_epoch().count());
+  	
 	/* Initiating variables for all neurons */
 	for(int i = 0; i < net_size; i++) {
 		n[i].v = randun()*(vth-vr)+vr;
-		n[i].buffersize = round(de/h)+1;
+		n[i].buffersize = 5*round(de/h)+1;
 
 		if(i>=0 && i < round(0.268* net_size)) {
 			n[i].layer = 1; //L23e
 			//n[i].ext_in = 1600*rf;
 			/* Initializing synaptic buffer with zeros*/
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
-				n[i].delay.push_back(de);
-				n[i].w.push_back(W*tau*(1/h));
+				n[i].delay.push_back(de + gsl_ran_gaussian(r_aloc,0.75));
+//				n[i].buffersize = round(n[i].delay.size())+1;
+				n[i].w.push_back((W + 0.1*gsl_ran_gaussian(r_aloc,W))*tau*(1/h));
+				//cout << (W + 0.1*gsl_ran_gaussian(r_aloc,W)) << endl;
 			}
 			
 		} else if(i >= round(0.268* net_size) && i < round(0.344*net_size)) {
 			n[i].layer = 2;	//L23i
 			//n[i].ext_in = 1500*rf;
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
-				n[i].delay.push_back(di);
-				n[i].w.push_back(-g*W*tau*(1/h));
+				n[i].delay.push_back(di + gsl_ran_gaussian(r_aloc,0.4));
+//				n[i].buffersize = round(n[i].delay.size())+1;
+				n[i].w.push_back(-g*(W + 0.1*gsl_ran_gaussian(r_aloc,W))*tau*(1/h));
 			}
 			
 		} else if(i >= round(0.344*net_size) && i < round(0.628*net_size))  {
 			n[i].layer = 3;	//L4e
 			//n[i].ext_in = 2100*rf;
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
-				n[i].delay.push_back(de);
+				n[i].delay.push_back(de + gsl_ran_gaussian(r_aloc,0.75));
+//				n[i].buffersize = round(n[i].delay.size())+1;
 				
 				// Connections from L4e to L23e have synapse weight = 2*w
 				if(n[n[i].post[j]].layer==1){	
-					n[i].w.push_back(2*W*tau*(1/h));
+					n[i].w.push_back(2*(W + 0.1*gsl_ran_gaussian(r_aloc,W))*tau*(1/h));
 				}else{
-					n[i].w.push_back(W*tau*(1/h));					
+					n[i].w.push_back((W + 0.1*gsl_ran_gaussian(r_aloc,W))*tau*(1/h));					
 				}
 			}
 			
@@ -113,40 +124,45 @@ void runsim(double W, double g, double seed) {
 			n[i].layer = 4;	//L4i
 			//n[i].ext_in = 1900*rf;
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
-				n[i].delay.push_back(di);
-				n[i].w.push_back(-g*W*tau*(1/h));
+				n[i].delay.push_back(di + gsl_ran_gaussian(r_aloc,0.4));
+//				n[i].buffersize = round(n[i].delay.size())+1;
+				n[i].w.push_back(-g*(W + 0.1*gsl_ran_gaussian(r_aloc,W))*tau*(1/h));
 			}
 			
 		} else if(i >= round(0.700*net_size) && i < round(0.763*net_size))  {
 			n[i].layer = 5;	//L5e
 			//n[i].ext_in = 2000*rf;
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
-				n[i].delay.push_back(de);
-				n[i].w.push_back(W*tau*(1/h));
+				n[i].delay.push_back(de + gsl_ran_gaussian(r_aloc,0.75));
+//				n[i].buffersize = round(n[i].delay.size())+1;
+				n[i].w.push_back((W + 0.1*gsl_ran_gaussian(r_aloc,W))*tau*(1/h));
 			}
 			
 		} else if(i >= round(0.763*net_size) && i < round(0.777*net_size))  {
 			n[i].layer = 6;	//L5i
 			//n[i].ext_in = 1900*rf;;
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
-				n[i].delay.push_back(di);
-				n[i].w.push_back(-g*W*tau*(1/h));
+				n[i].delay.push_back(di + gsl_ran_gaussian(r_aloc,0.4));
+//				n[i].buffersize = round(n[i].delay.size())+1;
+				n[i].w.push_back(-g*(W + 0.1*gsl_ran_gaussian(r_aloc,W))*tau*(1/h));
 			}
 			
 		} else if(i >= round(0.777* net_size) && i < round(0.963*net_size)) {
 			n[i].layer = 7;	//L6e
 			//n[i].ext_in = 2900*rf;
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
-				n[i].delay.push_back(de);
-				n[i].w.push_back(W*tau*(1/h));
+				n[i].delay.push_back(de + gsl_ran_gaussian(r_aloc,0.75));
+//				n[i].buffersize = round(n[i].delay.size())+1;
+				n[i].w.push_back((W + 0.1*gsl_ran_gaussian(r_aloc,W))*tau*(1/h));
 			}
 			
 		} else if(i >= round(0.963*net_size) && i < round(1.0*net_size)) {
 			n[i].layer = 8;	//L6i
 			//n[i].ext_in = 2100*rf;
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
-				n[i].delay.push_back(di);
-				n[i].w.push_back(-g*W*tau*(1/h));
+				n[i].delay.push_back(di + gsl_ran_gaussian(r_aloc,0.4));
+//				n[i].buffersize = round(n[i].delay.size())+1;
+				n[i].w.push_back(-g*(W + 0.1*gsl_ran_gaussian(r_aloc,W))*tau*(1/h));
 			}
 		}
 		
@@ -169,6 +185,12 @@ void runsim(double W, double g, double seed) {
 		for(int j = 0; j < net_size; j++) {
 
 			ind = (i)%(n[j].buffersize);
+			
+//			if (n[j].layer == 3){
+				ext_input = -45;
+//			}else{
+//				ext_input = vr;
+//			}
 
 			//IF model solved by Euler method
 			if(n[j].acum_ref < t_ref ){
@@ -252,7 +274,7 @@ int main(int argc, char *argv[]){
 	 *	//}
 	 *	MPI::Finalize();*/
 
-	runsim(0.35,5.0,1);
+	runsim(0.15,4,1);
 
 	return 0;
 }
