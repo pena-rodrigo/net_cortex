@@ -29,12 +29,14 @@ struct neuron {
 	int buffersize;         	/* Number of steps with size h corresponding to time delay*/
 	int layer;             		/* Neuron layer l2/3e=1, l2/3i=2 l4e=3, l4i=4, ..., l6e=7, l6i=8 */
 	double v;                	/* Membrane potencial */
+	double u;
 	double acum_ref;			/* Acumulator for the refractory time*/
 	vector <double> w;                 	/* Synaptic weigth */	
 	vector <double> delay;		/* Synapses delays */
 	vector <double> syn_input;	/* List of synaptic increments to be added to the neuron considering time delay*/
 	vector <int> post;        	/* Index of all post-synaptic neurons */
 	vector <double> tdisp;    	/* Spiking times */
+	double a,b,c,d;	//parameters Izhikevich
 } ;
 
 void runsim(double W, double g, double seed) {
@@ -44,14 +46,15 @@ void runsim(double W, double g, double seed) {
 
 	int net_size = 4000;			/* Number of neurons of the network*/
 	double h = 0.1;					/* Integration step */
-	double tmax = 1000;          	/* Simulation time in ms */
+	double tmax = 5000;          	/* Simulation time in ms */
 	double de = 1.5;               	/* Delay for excitatory connections*/
 	double di = 0.8;               	/* Delay for inhibitory connections */
 	double t_ref = 2;				/* Refractory time*/
+	
 
 	/* Neuron model parameters */
 	double vr = -65.0;           	/* Resting Potencial */
-	double vth = -50.0;				/* Threshold potential*/
+	double vth = 30;//-50.0;				/* Threshold potential*/
 	double tau = 10.0;				/* Time constant for IF model */
 
 	/* Using differents seeds to generate random numbers */
@@ -83,7 +86,11 @@ void runsim(double W, double g, double seed) {
 	/* Initiating variables for all neurons */
 	for(int i = 0; i < net_size; i++) {
 		n[i].v = randun()*(vth-vr)+vr;
+		n[i].u = n[i].b*n[i].v;
 		n[i].buffersize = 5*round(de/h)+1;
+		n[i].a=0.02; n[i].b=0.2;	
+		n[i].c=-65.0; n[i].d=8.0;
+		
 
 		if(i>=0 && i < round(0.268* net_size)) {
 			n[i].layer = 1; //L23e
@@ -92,7 +99,7 @@ void runsim(double W, double g, double seed) {
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
 				n[i].delay.push_back(de + gsl_ran_gaussian(r_aloc,0.75));
 //				n[i].buffersize = round(n[i].delay.size())+1;
-				n[i].w.push_back((W + 0.1*gsl_ran_gaussian(r_aloc,W))*tau*(1/h));
+				n[i].w.push_back((W + 0.1*gsl_ran_gaussian(r_aloc,W))*(1/h));
 				//cout << (W + 0.1*gsl_ran_gaussian(r_aloc,W)) << endl;
 			}
 			
@@ -102,7 +109,7 @@ void runsim(double W, double g, double seed) {
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
 				n[i].delay.push_back(di + gsl_ran_gaussian(r_aloc,0.4));
 //				n[i].buffersize = round(n[i].delay.size())+1;
-				n[i].w.push_back(-g*(W + 0.1*gsl_ran_gaussian(r_aloc,W))*tau*(1/h));
+				n[i].w.push_back(-g*(W + 0.1*gsl_ran_gaussian(r_aloc,W))*(1/h));
 			}
 			
 		} else if(i >= round(0.344*net_size) && i < round(0.628*net_size))  {
@@ -114,9 +121,9 @@ void runsim(double W, double g, double seed) {
 				
 				// Connections from L4e to L23e have synapse weight = 2*w
 				if(n[n[i].post[j]].layer==1){	
-					n[i].w.push_back(2*(W + 0.1*gsl_ran_gaussian(r_aloc,W))*tau*(1/h));
+					n[i].w.push_back(2*(W + 0.1*gsl_ran_gaussian(r_aloc,W))*(1/h));
 				}else{
-					n[i].w.push_back((W + 0.1*gsl_ran_gaussian(r_aloc,W))*tau*(1/h));					
+					n[i].w.push_back((W + 0.1*gsl_ran_gaussian(r_aloc,W))*(1/h));					
 				}
 			}
 			
@@ -126,7 +133,7 @@ void runsim(double W, double g, double seed) {
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
 				n[i].delay.push_back(di + gsl_ran_gaussian(r_aloc,0.4));
 //				n[i].buffersize = round(n[i].delay.size())+1;
-				n[i].w.push_back(-g*(W + 0.1*gsl_ran_gaussian(r_aloc,W))*tau*(1/h));
+				n[i].w.push_back(-g*(W + 0.1*gsl_ran_gaussian(r_aloc,W))*(1/h));
 			}
 			
 		} else if(i >= round(0.700*net_size) && i < round(0.763*net_size))  {
@@ -135,7 +142,7 @@ void runsim(double W, double g, double seed) {
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
 				n[i].delay.push_back(de + gsl_ran_gaussian(r_aloc,0.75));
 //				n[i].buffersize = round(n[i].delay.size())+1;
-				n[i].w.push_back((W + 0.1*gsl_ran_gaussian(r_aloc,W))*tau*(1/h));
+				n[i].w.push_back((W + 0.1*gsl_ran_gaussian(r_aloc,W))*(1/h));
 			}
 			
 		} else if(i >= round(0.763*net_size) && i < round(0.777*net_size))  {
@@ -144,7 +151,7 @@ void runsim(double W, double g, double seed) {
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
 				n[i].delay.push_back(di + gsl_ran_gaussian(r_aloc,0.4));
 //				n[i].buffersize = round(n[i].delay.size())+1;
-				n[i].w.push_back(-g*(W + 0.1*gsl_ran_gaussian(r_aloc,W))*tau*(1/h));
+				n[i].w.push_back(-g*(W + 0.1*gsl_ran_gaussian(r_aloc,W))*(1/h));
 			}
 			
 		} else if(i >= round(0.777* net_size) && i < round(0.963*net_size)) {
@@ -153,7 +160,7 @@ void runsim(double W, double g, double seed) {
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
 				n[i].delay.push_back(de + gsl_ran_gaussian(r_aloc,0.75));
 //				n[i].buffersize = round(n[i].delay.size())+1;
-				n[i].w.push_back((W + 0.1*gsl_ran_gaussian(r_aloc,W))*tau*(1/h));
+				n[i].w.push_back((W + 0.1*gsl_ran_gaussian(r_aloc,W))*(1/h));
 			}
 			
 		} else if(i >= round(0.963*net_size) && i < round(1.0*net_size)) {
@@ -162,7 +169,7 @@ void runsim(double W, double g, double seed) {
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
 				n[i].delay.push_back(di + gsl_ran_gaussian(r_aloc,0.4));
 //				n[i].buffersize = round(n[i].delay.size())+1;
-				n[i].w.push_back(-g*(W + 0.1*gsl_ran_gaussian(r_aloc,W))*tau*(1/h));
+				n[i].w.push_back(-g*(W + 0.1*gsl_ran_gaussian(r_aloc,W))*(1/h));
 			}
 		}
 		
@@ -177,7 +184,7 @@ void runsim(double W, double g, double seed) {
 
 	/********************************************************** SIMULATION **********************************************************/
 	int ind_postlist = 0;		/* Index for the postsynaptic neuron*/
-	double ext_input = -40;	/* External input*/
+	double ext_input = 10;//-40;	/* External input*/
 	int ind = 0;			/* Index for the buffer of synaptic inputs considering time delays*/
 	cout << "Simulation: " << endl;
 
@@ -187,7 +194,7 @@ void runsim(double W, double g, double seed) {
 			ind = (i)%(n[j].buffersize);
 			
 //			if (n[j].layer == 3){
-				ext_input = -45;
+		//		ext_input = -45;
 //			}else{
 //				ext_input = vr;
 //			}
@@ -196,13 +203,16 @@ void runsim(double W, double g, double seed) {
 			if(n[j].acum_ref < t_ref ){
 				n[j].acum_ref+=h;
 			}else{
-				n[j].v += (h/tau)*(-n[j].v + ext_input + n[j].syn_input[ind]);
+				//n[j].v += (h/tau)*(-n[j].v + ext_input + n[j].syn_input[ind]);
+				n[j].v += h*(0.04*n[j].v*n[j].v + 5*n[j].v + 140 - n[j].u + ext_input + n[j].syn_input[ind]);
+				n[j].u += h*(n[j].a*(n[j].b*n[j].v - n[j].u));
 			}
 
 			n[j].syn_input[ind] = 0;
 
 			if(n[j].v > vth){
-				n[j].v = vr;
+				n[j].v = n[j].c;
+				n[j].u += n[j].d;
 				n[j].tdisp.push_back(double(i)*h);
 				n[j].acum_ref=0;
 
