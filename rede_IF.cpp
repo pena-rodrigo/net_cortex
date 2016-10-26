@@ -1,4 +1,4 @@
-/* Version 2.0 */
+// to run: 
 
 # include <iostream>
 # include <stdio.h>
@@ -39,6 +39,43 @@ struct neuron {
 	double a,b,c,d;	//parameters Izhikevich
 } ;
 
+double * updateNeuronInput(int Ce, double rate, double J, double tau, double h, double tf){
+	double * input = new double[(int) floor(tf/h)+1];
+	int N = ((int) floor(tf/h)+1);
+	for (int i = 0; i < N; i++){
+    	input[i] = 0;
+    }
+	//cout << "working" << endl;
+  	gsl_rng *r;
+  	double randNum;
+  	double nextTime=0, values=0;
+
+	if((r = gsl_rng_alloc(gsl_rng_mt19937)) == NULL) {
+		printf("ERROR: Could not create random number generator\n");
+	    exit(1);
+	}
+	
+	gsl_rng_set(r, chrono::high_resolution_clock::now().time_since_epoch().count());
+   
+    // Poisson generator by method 1
+ 	double aux_rate = (rate*0.001*h);
+	for (int n = 0; n < Ce; n++){
+		values=0;	
+    	while ((int)(values) < N){	
+    		input[(int)(values)] += (1/h)*J*tau;  // Excitatory input
+    		randNum = gsl_rng_uniform_pos(r);
+    		nextTime = -log(1-randNum) / aux_rate;
+			values += nextTime;
+	     	}
+	}
+	 
+	input[0]=0;
+	
+	gsl_rng_free(r);
+	
+	return input;
+}
+
 void runsim(double W, double g, double seed) {
 
 	/* W = Maximum synaptic weigth */
@@ -50,8 +87,22 @@ void runsim(double W, double g, double seed) {
 	double de = 1.5;               	/* Delay for excitatory connections*/
 	double di = 0.8;               	/* Delay for inhibitory connections */
 	double t_ref = 2;				/* Refractory time*/
+	double ** external_input = new double*[net_size];
+	for(int i = 0; i < net_size; i++){
+//		 external_input[i] = new double[(int) floor(tmax/h)+1];
+		 external_input[i] = updateNeuronInput(1000, 8, W, 1, h, tmax);
+	}
 	
-
+//	for (int j = 0; j < net_size; j++){
+//   		for (int i = 0; i < (int) floor(tmax/h)+1; i++){	
+//   			external_input[j][i] = 0;
+//   		}
+//   	}
+//   	
+//   	for (int j = 0; j < net_size; j++){
+   		
+   		
+		
 	/* Neuron model parameters */
 	double vr = -65.0;           	/* Resting Potencial */
 	double vth = 30;//-50.0;				/* Threshold potential*/
@@ -234,7 +285,7 @@ void runsim(double W, double g, double seed) {
 
 	/********************************************************** SIMULATION **********************************************************/
 	int ind_postlist = 0;		/* Index for the postsynaptic neuron*/
-	double ext_input = 10;//-40;	/* External input*/
+	double ext_input = 0;//-40;	/* External input*/
 	int ind = 0;			/* Index for the buffer of synaptic inputs considering time delays*/
 	cout << "Simulation: " << endl;
 
@@ -258,7 +309,7 @@ void runsim(double W, double g, double seed) {
 				n[j].acum_ref+=h;
 			}else{
 				//n[j].v += (h/tau)*(-n[j].v + ext_input + n[j].syn_input[ind]);
-				n[j].v += h*(0.04*n[j].v*n[j].v + 5*n[j].v + 140 - n[j].u + ext_input + n[j].syn_input[ind]);
+				n[j].v += h*(0.04*n[j].v*n[j].v + 5*n[j].v + 140 - n[j].u + ext_input + n[j].syn_input[ind] + external_input[j][i]);
 				n[j].u += h*(n[j].a*(n[j].b*n[j].v - n[j].u));
 			}
 
@@ -294,6 +345,13 @@ void runsim(double W, double g, double seed) {
 		}
 	}
 	fclose(data);
+	
+	for(int i = 0; i < net_size; i++)
+       	delete[] external_input[i];
+    delete[] external_input;
+    external_input = nullptr;
+    
+    gsl_rng_free(r_aloc);
 
 	cout << double( clock() - startTime ) / (double)CLOCKS_PER_SEC<< " s.\n\n" << endl;
 	return;
