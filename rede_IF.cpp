@@ -83,15 +83,15 @@ void runsim(double W, double g, double seed) {
 
 	int net_size = 4000;			/* Number of neurons of the network*/
 	double h = 0.1;					/* Integration step */
-	double tmax = 5000;          	/* Simulation time in ms */
+	double tmax = 2000;          	/* Simulation time in ms */
 	double de = 1.5;               	/* Delay for excitatory connections*/
 	double di = 0.8;               	/* Delay for inhibitory connections */
 	double t_ref = 2;				/* Refractory time*/
 	double ** external_input = new double*[net_size];
-	for(int i = 0; i < net_size; i++){
+	//for(int i = 0; i < net_size; i++){
 //		 external_input[i] = new double[(int) floor(tmax/h)+1];
-		 external_input[i] = updateNeuronInput(1000, 8, W, 1, h, tmax);
-	}
+		// external_input[i] = updateNeuronInput(1000, 8, W, 1, h, tmax);
+	//}
 	
 //	for (int j = 0; j < net_size; j++){
 //   		for (int i = 0; i < (int) floor(tmax/h)+1; i++){	
@@ -145,6 +145,7 @@ void runsim(double W, double g, double seed) {
 		n[i].buffersize = 3.5*round(de/h)+1;
 
 		if(i>=0 && i < round(0.268* net_size)) {
+		    external_input[i] = updateNeuronInput(2000, 8, W, 1, h, tmax);
 			n[i].layer = 1; //L23e
 			//n[i].ext_in = 1600*rf;
 			/* Initializing synaptic buffer with zeros*/
@@ -163,6 +164,8 @@ void runsim(double W, double g, double seed) {
 			}
 			
 		} else if(i >= round(0.268* net_size) && i < round(0.344*net_size)) {
+			external_input[i] = updateNeuronInput(1850, 8, W, 1, h, tmax);
+
 			n[i].layer = 2;	//L23i
 			//n[i].ext_in = 1500*rf;
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
@@ -178,6 +181,7 @@ void runsim(double W, double g, double seed) {
 			}
 			
 		} else if(i >= round(0.344*net_size) && i < round(0.628*net_size))  {
+			external_input[i] = updateNeuronInput(2000, 8, W, 1, h, tmax);
 			n[i].layer = 3;	//L4e
 			//n[i].ext_in = 2100*rf;
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
@@ -199,6 +203,7 @@ void runsim(double W, double g, double seed) {
 			}
 			
 		} else if(i >= round(0.628*net_size) && i < round(0.700*net_size))  {
+			external_input[i] = updateNeuronInput(1850, 8, W, 1, h, tmax);
 			n[i].layer = 4;	//L4i
 			//n[i].ext_in = 1900*rf;
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
@@ -214,6 +219,7 @@ void runsim(double W, double g, double seed) {
 			}
 			
 		} else if(i >= round(0.700*net_size) && i < round(0.763*net_size))  {
+		    external_input[i] = updateNeuronInput(2000, 8, W, 1, h, tmax);
 			n[i].layer = 5;	//L5e
 			//n[i].ext_in = 2000*rf;
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
@@ -229,6 +235,7 @@ void runsim(double W, double g, double seed) {
 			}
 			
 		} else if(i >= round(0.763*net_size) && i < round(0.777*net_size))  {
+			external_input[i] = updateNeuronInput(1850, 8, W, 1, h, tmax);
 			n[i].layer = 6;	//L5i
 			//n[i].ext_in = 1900*rf;;
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
@@ -244,6 +251,7 @@ void runsim(double W, double g, double seed) {
 			}
 			
 		} else if(i >= round(0.777* net_size) && i < round(0.963*net_size)) {
+			external_input[i] = updateNeuronInput(2000, 8, W, 1, h, tmax);
 			n[i].layer = 7;	//L6e
 			//n[i].ext_in = 2900*rf;
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
@@ -259,6 +267,7 @@ void runsim(double W, double g, double seed) {
 			}
 			
 		} else if(i >= round(0.963*net_size) && i < round(1.0*net_size)) {
+			external_input[i] = updateNeuronInput(1850, 8, W, 1, h, tmax);
 			n[i].layer = 8;	//L6i
 			//n[i].ext_in = 2100*rf;
 			for (unsigned int j = 0; j< n[i].post.size(); j++){
