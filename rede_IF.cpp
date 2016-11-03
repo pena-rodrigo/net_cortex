@@ -316,6 +316,7 @@ void runsim(double W, double g, double seed) {
 			//IF model solved by Euler method
 			if(n[j].acum_ref < t_ref ){
 				n[j].acum_ref+=h;
+				n[j].u += h*(n[j].a*(n[j].b*n[j].v - n[j].u));
 			}else{
 				//n[j].v += (h/tau)*(-n[j].v + ext_input + n[j].syn_input[ind]);
 				n[j].v += h*(0.04*n[j].v*n[j].v + 5*n[j].v + 140 - n[j].u + ext_input + n[j].syn_input[ind] + external_input[j][i]);
