@@ -287,22 +287,30 @@ void runsim(double W, double g, double seed) {
 
 			n[j].syn_input[ind] = 0;
 			
-			if(n[j].v <= n[j].vth) {
-				prob = 0;
-			} else if(n[j].v > n[j].vth && n[j].v < n[j].vs) {
+
+			if(n[j].v >= n[j].vs) {
+				n[j].tdisp.push_back(i);
+				n[j].v = vr;
+				n[j].acum_ref = 0;
+
+				/* Adding synaptic inputs considering time delays between each pair of neurons connected*/
+				for (unsigned int p = 0; p < n[j].post.size(); p++){
+				    ind_postlist = n[j].post[p];
+				    n[ind_postlist].syn_input[(ind + n[j].delay[p])%(buffersize)]+=n[j].w[p];
+				}	
+			}else if(n[j].v > n[j].vth && n[j].v < n[j].vs) {
 				prob = pow(n[j].gamma*(n[j].v-n[j].vth), n[j].r) + n[j].delta;
-			} else if(n[j].v >= n[j].vs) {
-				prob = 1;
-			}
-			
-			if(randun()  < prob) {
-			    n[j].tdisp.push_back(i);
-			    n[j].v = vr;
-			    /* Adding synaptic inputs considering time delays between each pair of neurons connected*/
-			    for (unsigned int p = 0; p < n[j].post.size(); p++){
-				ind_postlist = n[j].post[p];
-				n[ind_postlist].syn_input[(ind + n[j].delay[p])%(buffersize)]+=n[j].w[p];
-			    }			    
+				if (randun() < prob) {
+				    n[j].tdisp.push_back(i);
+				    n[j].v = vr;
+    				    n[j].acum_ref = 0;
+
+				    /* Adding synaptic inputs considering time delays between each pair of neurons connected*/
+				    for (unsigned int p = 0; p < n[j].post.size(); p++){
+					ind_postlist = n[j].post[p];
+					n[ind_postlist].syn_input[(ind + n[j].delay[p])%(buffersize)]+=n[j].w[p];
+				    }
+				}
 			}
 		}
 	}
