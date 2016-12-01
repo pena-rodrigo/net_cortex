@@ -83,15 +83,25 @@ n[i].r = 1.0;		// r adjusted for RS Izhikevich neuron
 n[i].vs = n[i].vth + pow((1-n[i].delta),(1/n[i].r))/n[i].gamma;
 n[i].v = randun()*(n[i].vth-vr)+vr;
 */
-void setParams(struct neuron *n) {
+void setParams(struct neuron *n, int type) {
 	double vr = -65.0;
 	// Ex	
-		n->vth = vr + 0.375;
-		n->gamma = 0.11;
+	if(type == 0) {
+		n->vth = vr + 0.5;
+		n->gamma = 0.037;
 		n->delta = 0.0;
-		n->r = 0.23;
+		n->r = 1.0;
 		n->vs = n->vth + pow((1-n->delta),(1/n->r))/n->gamma;
 		n->v = randun()*(n->vth-vr)+vr;
+	// In
+	} else if(type == 1) {
+		n->vth = vr + 1.92;
+		n->gamma = 0.05;
+		n->delta = 0.3;
+		n->r = 1.0;
+		n->vs = n->vth + pow((1-n->delta),(1/n->r))/n->gamma;
+		n->v = randun()*(n->vth-vr)+vr;
+	}
 	
 	 
 }
